@@ -1,0 +1,23 @@
+
+input {
+	outline: none;
+}
+
+.error {
+	border: 3px solid red;
+}
+
+.errorMessage {
+	color: red;
+	font-size: 12px;
+}
+
+.activeFilter {
+	background-color: aquamarine;
+	outline: none;
+	border: 1px solid #000;
+}
+
+.isDone {
+	opacity: 0.5;
+}
