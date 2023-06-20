@@ -13,36 +13,39 @@ export const todolistAPI = {
 		return instance.get<GetTodolistType[]>(`todo-lists`)
 	},
 	createTodolist(title: string) {
-		return instance.post<ResponsType<{ item: GetTodolistType }>>(`todo-lists`, { title })
+		return instance.post<ResponseType<{ item: GetTodolistType }>>(`todo-lists`, { title })
 	},
 	updateTodolist(todolistID: string, title: string) {
-		return instance.put<ResponsType>(`todo-lists/${todolistID}`, { title })
+		return instance.put<ResponseType>(`todo-lists/${todolistID}`, { title })
 	},
 	deleteTodolist(todolistID: string) {
-		return instance.delete<ResponsType>(`todo-lists/${todolistID}`)
+		return instance.delete<ResponseType>(`todo-lists/${todolistID}`)
 	},
 	getTasks(todolistID: string) {
 		return instance.get<getTasksResponseType>(`todo-lists/${todolistID}/tasks`)
 	},
 	createTask(todolistID: string, title: string) {
-		return instance.post<ResponsType<{ item: GetTaskType }>>(`todo-lists/${todolistID}/tasks`, { title })
+		return instance.post<ResponseType<{ item: GetTaskType }>>(`todo-lists/${todolistID}/tasks`, { title })
 	},
 	updateTask(todolistID: string, taskId: string, model: UpdateTaskModelType) {
-		return instance.put<ResponsType<{ item: GetTaskType }>>(`todo-lists/${todolistID}/tasks/${taskId}`, model)
+		return instance.put<ResponseType<{ item: GetTaskType }>>(`todo-lists/${todolistID}/tasks/${taskId}`, model)
 	},
 	deleteTask(todolistID: string, taskId: string) {
-		return instance.delete<ResponsType<{ item: GetTaskType }>>(`todo-lists/${todolistID}/tasks/${taskId}`)
+		return instance.delete<ResponseType<{ item: GetTaskType }>>(`todo-lists/${todolistID}/tasks/${taskId}`)
 	},
 }
 
-// export const authAPI = {
-// 	login(data: LoginType) {
-// 		return instance.post<ResponsType<{ userId: number }>>(`auth/login`, data)
-// 	},
-// 	me() {
-// 		return instance.get<ResponsType<UserType>>(`auth/me`)
-// 	}
-// }
+export const authAPI = {
+	login(data: LoginType) {
+		return instance.post<ResponseType<{ userId: number }>>(`auth/login`, data)
+	},
+	me() {
+		return instance.get<ResponseType<UserType>>(`auth/me`)
+	},
+	logOut() {
+		return instance.delete<ResponseType>(`auth/login`)
+	}
+}
 
 export enum ResultCode {
 	OK = 0,
@@ -70,7 +73,7 @@ export type GetTodolistType = {
 	order: number
 }
 
-type ResponsType<T = {}> = {
+export type ResponseType<T = {}> = {
 	resultCode: number
 	messages: string[],
 	data: T

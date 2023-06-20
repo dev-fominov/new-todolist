@@ -1,11 +1,10 @@
-import { v1 } from "uuid"
 import { TaskAssocType } from "../App"
-import { TaskType } from "../Todolist"
 import { AddTodolistACType, RemoveTodolistAC, SetTodoLists } from "./todolists-reducer"
 import { GetTaskType, ResultCode, TaskPriorities, TaskStatuses, UpdateTaskModelType, todolistAPI } from "../api/api"
-import { AppRootStateType } from "./store"
-import { setErrorAC, setStatusAC, setStatusACType } from "./app-reducer"
-import { handleServerNetworkError } from "../utils/error-utils"
+import { AppRootStateType, AppThunkType } from "./store"
+import { setStatusAC, setStatusACType } from "./app-reducer"
+import { handleServerAppError, handleServerNetworkError } from "../utils/error-utils"
+import axios from "axios"
 
 
 const initialState: TaskAssocType = {}
@@ -62,6 +61,123 @@ export const updateTaskAC = (todolistID: string, taskID: string, model: UpdateTa
 	} as const
 }
 
+export const setTasks = (todoID: string, tasks: GetTaskType[]) => ({
+	type: "SET-TASKS",
+	payload: { todoID, tasks }
+} as const)
+
+export const getTasks = (todoID: string): AppThunkType => async dispatch => {
+	try {
+		dispatch(setStatusAC('loading'))
+		const res = await todolistAPI.getTasks(todoID)
+		dispatch(setTasks(todoID, res.data.items))
+		dispatch(setStatusAC('succeeded'))
+	} catch (err) {
+		if (axios.isAxiosError<ErrorsType>(err)) {
+			const messageError = err.response ? err.response.data.message : err.message
+			handleServerNetworkError(messageError, dispatch)
+		} else {
+			const error = (err as Error).message
+			console.log(error)
+		}
+	}
+}
+
+export const addTaskTC = (todolistID: string, title: string): AppThunkType => async dispatch => {
+	try {
+		dispatch(setStatusAC('loading'))
+		const res = await todolistAPI.createTask(todolistID, title)
+		if (res.data.resultCode === ResultCode.OK) {
+			dispatch(addTaskAC(res.data.data.item))
+		} else {
+			handleServerAppError<{ item: GetTaskType }>(res.data, dispatch)
+		}
+		dispatch(setStatusAC('succeeded'))
+	} catch (err) {
+		if (axios.isAxiosError<ErrorsType>(err)) {
+			const messageError = err.response ? err.response.data.message : err.message
+			handleServerNetworkError(messageError, dispatch)
+		} else {
+			const error = (err as Error).message
+			console.log(error)
+		}
+	}
+}
+
+export const deleteTaskTC = (todolistID: string, taskId: string): AppThunkType => async dispatch => {
+	try {
+		dispatch(setStatusAC('loading'))
+		await todolistAPI.deleteTask(todolistID, taskId)
+		dispatch(removeTaskAC(todolistID, taskId))
+		dispatch(setStatusAC('succeeded'))
+	} catch (err) {
+		if (axios.isAxiosError<ErrorsType>(err)) {
+			const messageError = err.response ? err.response.data.message : err.message
+			handleServerNetworkError(messageError, dispatch)
+		} else {
+			const error = (err as Error).message
+			console.log(error)
+		}
+	}
+}
+
+export const updateTaskTC = (todolistID: string, taskId: string, data: FlexType): AppThunkType =>
+	async (dispatch, getState: () => AppRootStateType) => {
+
+		dispatch(setStatusAC('loading'))
+		const task = getState().tasks[todolistID].find(t => t.id === taskId)
+
+		if (!task) {
+			console.log('Task not found')
+			return
+		}
+		const model: UpdateTaskModelType = {
+			title: task.title,
+			description: task.description,
+			priority: task.priority,
+			startDate: task.startDate,
+			deadline: task.deadline,
+			status: task.status,
+			...data
+
+		}
+
+		try {
+			const res = await todolistAPI.updateTask(todolistID, taskId, model)
+			if (res.data?.resultCode === ResultCode.OK) {
+				dispatch(updateTaskAC(todolistID, taskId, model))
+				dispatch(setStatusAC('succeeded'))
+			} else {
+				handleServerAppError<{ item: GetTaskType }>(res.data, dispatch)
+			}
+		} catch (err) {
+			if (axios.isAxiosError<ErrorsType>(err)) {
+				const messageError = err.response ? err.response.data.message : err.message
+				handleServerNetworkError(messageError, dispatch)
+			} else {
+				const error = (err as Error).message
+				console.log(error)
+			}
+		}
+	}
+
+
+
+export type ErrorsType = {
+	field: string
+	message: string
+}
+
+interface FlexType {
+	description?: string
+	title?: string
+	status?: TaskStatuses
+	priority?: TaskPriorities
+	startDate?: string
+	deadline?: string
+}
+
+
 export type TaskReducersType = RemoveTaskACType
 	| AddTaskACType
 	| UpdateTaskACType
@@ -77,89 +193,3 @@ type AddTaskACType = ReturnType<typeof addTaskAC>
 type UpdateTaskACType = ReturnType<typeof updateTaskAC>
 
 export type setTasksType = ReturnType<typeof setTasks>
-
-export const setTasks = (todoID: string, tasks: GetTaskType[]) => ({
-	type: "SET-TASKS",
-	payload: { todoID, tasks }
-} as const)
-
-export const getTasks = (todoID: string) => (dispatch: any) => {
-	dispatch(setStatusAC('loading'))
-	todolistAPI.getTasks(todoID)
-		.then((res) => {
-			console.log(res.data.items)
-			dispatch(setTasks(todoID, res.data.items))
-			dispatch(setStatusAC('succeeded'))
-		})
-		.catch((err) => {
-			handleServerNetworkError(err.message, dispatch)
-		})
-}
-
-export const addTaskTC = (todolistID: string, title: string) => (dispatch: any) => {
-	dispatch(setStatusAC('loading'))
-	todolistAPI.createTask(todolistID, title)
-		.then((res) => {
-			if (res.data.resultCode === ResultCode.OK) {
-				dispatch(addTaskAC(res.data.data.item))
-			} else {
-				if (res.data.messages.length > 0) {
-					dispatch(setErrorAC(res.data.messages[0]))
-				} else {
-					dispatch(setErrorAC('Some error'))
-				}
-			}
-			dispatch(setStatusAC('idle'))
-
-		})
-		.catch((err) => {
-			handleServerNetworkError(err.message, dispatch)
-		})
-}
-
-export const deleteTaskTC = (todolistID: string, taskId: string) => (dispatch: any) => {
-	dispatch(setStatusAC('loading'))
-	todolistAPI.deleteTask(todolistID, taskId)
-		.then((res) => {
-			dispatch(removeTaskAC(todolistID, taskId))
-			dispatch(setStatusAC('succeeded'))
-		})
-		.catch((err) => {
-			handleServerNetworkError(err.message, dispatch)
-		})
-}
-
-interface FlexType {
-	description?: string
-	title?: string
-	status?: TaskStatuses
-	priority?: TaskPriorities
-	startDate?: string
-	deadline?: string
-}
-
-export const updateTaskTC = (todolistID: string, taskId: string, data: FlexType) => (dispatch: any, getState: () => AppRootStateType) => {
-	dispatch(setStatusAC('loading'))
-	const task = getState().tasks[todolistID].find(t => t.id === taskId)
-
-	if (task) {
-		const model: UpdateTaskModelType = {
-			title: task.title,
-			description: task.description,
-			priority: task.priority,
-			startDate: task.startDate,
-			deadline: task.deadline,
-			status: task.status,
-			...data
-
-		}
-		todolistAPI.updateTask(todolistID, taskId, model)
-			.then((res) => {
-				dispatch(updateTaskAC(todolistID, taskId, model))
-				dispatch(setStatusAC('succeeded'))
-			})
-			.catch((err) => {
-				handleServerNetworkError(err.message, dispatch)
-			})
-	}
-}

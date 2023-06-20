@@ -73,7 +73,7 @@ export const TodolistRedux = memo((props: PropsType) => {
 	}
 
 	return (
-		<div>
+		<div className="todolist">
 			<h3>
 				<button disabled={props.entityStatus === 'loading'} onClick={removeTodolistHandler}>x</button>
 				{props.title}
