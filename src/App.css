@@ -7,3 +7,16 @@
 .App > div {
   margin-right: 50px;
 }
+
+.errorSnackbar {
+	position: absolute;
+	bottom: 10px;
+	left: 10px;
+	background-color: bisque;
+	padding: 10px 30px;
+	border-radius: 5px;
+}
+
+.errorSnackbar button {
+	margin-left: 10px;
+}

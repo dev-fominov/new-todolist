@@ -44,6 +44,12 @@ export const todolistAPI = {
 // 	}
 // }
 
+export enum ResultCode {
+	OK = 0,
+	ERROR = 1,
+	ERROR_CAPTCHA = 10
+}
+
 export type UserType = {
 	id: number,
 	email: string,

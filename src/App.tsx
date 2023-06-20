@@ -1,18 +1,18 @@
 import './App.css';
 import { AddItemForm } from './AddItemForm';
 import { addTodolistTC, getTodos } from './reducers/todolists-reducer';
-import { useSelector } from 'react-redux';
-import { AppRootStateType, useAppDispatch } from './reducers/store';
+import { useAppDispatch, useAppSelector } from './reducers/store';
 import { TodolistRedux } from './TodolistRedux';
 import { useEffect } from 'react';
-import { GetTaskType } from './api/api';
+import { GetTaskType, GetTodolistType } from './api/api';
+import { RequestStatusType } from './reducers/app-reducer';
+import { ErrorSnackbar } from './components/ErrorSnackbar/ErrorSnackbar';
 
 
 export type FilterType = 'All' | 'Active' | 'Completed'
-export type TodolistsType = {
-	id: string
-	title: string
+export type TodolistDomainType = GetTodolistType & {
 	filter: FilterType
+	entityStatus: RequestStatusType
 }
 
 export type TaskAssocType = {
@@ -46,10 +46,9 @@ export const App = () => {
 	// 	]
 	// })
 
-	let todolists = useSelector<AppRootStateType, Array<TodolistsType>>(state => state.todolists)
+	let todolists = useAppSelector<Array<TodolistDomainType>>(state => state.todolists)
+	let status = useAppSelector<RequestStatusType>(state => state.app.status)
 	// let tasks = useSelector<AppRootStateType, TaskAssocType>(state => state.tasks)
-
-	
 
 	// const removeTask = (todolistID: string, taskID: string) => {
 	// 	dispatch(removeTaskAC(todolistID, taskID))
@@ -77,18 +76,25 @@ export const App = () => {
 	// }
 
 	return (
-		<div className="App">
-			<AddItemForm callBack={addTodolist} />
-			{todolists.map((el) => {
-				return (
-					<TodolistRedux
-						key={el.id}
-						todolistID={el.id}
-						title={el.title}
-						filter={el.filter}
-					/>
-				)
-			})}
-		</div>
+		<>
+			{status === 'loading' && <div>Loading...</div>}
+			<div className="App">
+
+				<AddItemForm callBack={addTodolist} />
+				{todolists.map((el) => {
+					return (
+						<TodolistRedux
+							key={el.id}
+							todolistID={el.id}
+							title={el.title}
+							filter={el.filter}
+							entityStatus={el.entityStatus}
+						/>
+					)
+				})}
+			</div>
+			<ErrorSnackbar />
+		</>
+
 	);
 }

@@ -3,16 +3,17 @@ import { FilterType } from "./App"
 import s from "./Todolist.module.css"
 import { AddItemForm } from "./AddItemForm"
 import { EditableSpan } from "./EditableSpan"
-import { useSelector } from "react-redux"
-import { AppRootStateType, useAppDispatch } from "./reducers/store"
+import { useAppDispatch, useAppSelector } from "./reducers/store"
 import { deleteTaskTC, getTasks, addTaskTC, updateTaskTC } from "./reducers/tasks-reducer"
 import { removeTodolistTC } from "./reducers/todolists-reducer"
 import { GetTaskType, TaskStatuses } from "./api/api"
+import { RequestStatusType } from "./reducers/app-reducer"
 
 type PropsType = {
 	title: string
 	todolistID: string
 	filter: FilterType
+	entityStatus: RequestStatusType
 }
 
 export type TaskType = {
@@ -29,7 +30,7 @@ export const TodolistRedux = memo((props: PropsType) => {
 		dispatch(getTasks(props.todolistID))
 	}, [])
 
-	const tasks = useSelector<AppRootStateType, Array<GetTaskType>>(state => state.tasks[props.todolistID])
+	const tasks = useAppSelector<Array<GetTaskType>>(state => state.tasks[props.todolistID])
 	
 	
 	const [fValueNEW, setFValueNEW] = useState<FilterType>('All')
@@ -74,7 +75,7 @@ export const TodolistRedux = memo((props: PropsType) => {
 	return (
 		<div>
 			<h3>
-				<button onClick={removeTodolistHandler}>x</button>
+				<button disabled={props.entityStatus === 'loading'} onClick={removeTodolistHandler}>x</button>
 				{props.title}
 			</h3>
 			<AddItemForm callBack={addTaskHandler} />

@@ -2,8 +2,10 @@ import { v1 } from "uuid"
 import { TaskAssocType } from "../App"
 import { TaskType } from "../Todolist"
 import { AddTodolistACType, RemoveTodolistAC, SetTodoLists } from "./todolists-reducer"
-import { GetTaskType, TaskPriorities, TaskStatuses, UpdateTaskModelType, todolistAPI } from "../api/api"
+import { GetTaskType, ResultCode, TaskPriorities, TaskStatuses, UpdateTaskModelType, todolistAPI } from "../api/api"
 import { AppRootStateType } from "./store"
+import { setErrorAC, setStatusAC, setStatusACType } from "./app-reducer"
+import { handleServerNetworkError } from "../utils/error-utils"
 
 
 const initialState: TaskAssocType = {}
@@ -67,12 +69,12 @@ export type TaskReducersType = RemoveTaskACType
 	| RemoveTodolistAC
 	| SetTodoLists
 	| setTasksType
+	| setStatusACType
 
 
 type RemoveTaskACType = ReturnType<typeof removeTaskAC>
 type AddTaskACType = ReturnType<typeof addTaskAC>
 type UpdateTaskACType = ReturnType<typeof updateTaskAC>
-
 
 export type setTasksType = ReturnType<typeof setTasks>
 
@@ -82,22 +84,49 @@ export const setTasks = (todoID: string, tasks: GetTaskType[]) => ({
 } as const)
 
 export const getTasks = (todoID: string) => (dispatch: any) => {
-	todolistAPI.getTasks(todoID).then((res) => {
-		console.log(res.data.items)
-		dispatch(setTasks(todoID, res.data.items))
-	})
+	dispatch(setStatusAC('loading'))
+	todolistAPI.getTasks(todoID)
+		.then((res) => {
+			console.log(res.data.items)
+			dispatch(setTasks(todoID, res.data.items))
+			dispatch(setStatusAC('succeeded'))
+		})
+		.catch((err) => {
+			handleServerNetworkError(err.message, dispatch)
+		})
 }
 
 export const addTaskTC = (todolistID: string, title: string) => (dispatch: any) => {
-	todolistAPI.createTask(todolistID, title).then((res) => {
-		dispatch(addTaskAC(res.data.data.item))
-	})
+	dispatch(setStatusAC('loading'))
+	todolistAPI.createTask(todolistID, title)
+		.then((res) => {
+			if (res.data.resultCode === ResultCode.OK) {
+				dispatch(addTaskAC(res.data.data.item))
+			} else {
+				if (res.data.messages.length > 0) {
+					dispatch(setErrorAC(res.data.messages[0]))
+				} else {
+					dispatch(setErrorAC('Some error'))
+				}
+			}
+			dispatch(setStatusAC('idle'))
+
+		})
+		.catch((err) => {
+			handleServerNetworkError(err.message, dispatch)
+		})
 }
 
 export const deleteTaskTC = (todolistID: string, taskId: string) => (dispatch: any) => {
-	todolistAPI.deleteTask(todolistID, taskId).then((res) => {
-		dispatch(removeTaskAC(todolistID, taskId))
-	})
+	dispatch(setStatusAC('loading'))
+	todolistAPI.deleteTask(todolistID, taskId)
+		.then((res) => {
+			dispatch(removeTaskAC(todolistID, taskId))
+			dispatch(setStatusAC('succeeded'))
+		})
+		.catch((err) => {
+			handleServerNetworkError(err.message, dispatch)
+		})
 }
 
 interface FlexType {
@@ -110,7 +139,7 @@ interface FlexType {
 }
 
 export const updateTaskTC = (todolistID: string, taskId: string, data: FlexType) => (dispatch: any, getState: () => AppRootStateType) => {
-
+	dispatch(setStatusAC('loading'))
 	const task = getState().tasks[todolistID].find(t => t.id === taskId)
 
 	if (task) {
@@ -124,9 +153,13 @@ export const updateTaskTC = (todolistID: string, taskId: string, data: FlexType)
 			...data
 
 		}
-		todolistAPI.updateTask(todolistID, taskId, model).then((res) => {
-			console.log(res.data)
-			dispatch(updateTaskAC(todolistID, taskId, model))
-		})
+		todolistAPI.updateTask(todolistID, taskId, model)
+			.then((res) => {
+				dispatch(updateTaskAC(todolistID, taskId, model))
+				dispatch(setStatusAC('succeeded'))
+			})
+			.catch((err) => {
+				handleServerNetworkError(err.message, dispatch)
+			})
 	}
 }
