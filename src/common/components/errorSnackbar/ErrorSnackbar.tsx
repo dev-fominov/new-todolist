@@ -1,8 +1,5 @@
-import { useSelector } from "react-redux"
-import { ErrorType, setErrorAC } from "../../reducers/app-reducer"
-import { AppRootStateType, useAppDispatch, useAppSelector } from "../../reducers/store"
-
-
+import { ErrorType, appActions } from "app/app.reducer"
+import { useAppDispatch, useAppSelector } from "common/hooks"
 
 export const ErrorSnackbar = () => {
 
@@ -10,16 +7,14 @@ export const ErrorSnackbar = () => {
 	const error = useAppSelector<ErrorType>(state => state.app.error)
 
 	const closeHandler = () => {
-		dispatch(setErrorAC(null))
+		dispatch(appActions.setError({ error: null }))
 	}
 
 	if (!!error) {
 		setTimeout(() => {
-			dispatch(setErrorAC(null))
+			dispatch(appActions.setError({ error: null }))
 		}, 5000)
 	}
-
-
 
 	return (
 		<>

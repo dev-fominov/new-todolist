@@ -1,14 +1,14 @@
 import './App.css';
-import { getTodos } from './reducers/todolists-reducer';
-import { useAppDispatch, useAppSelector } from './reducers/store';
 import { useEffect } from 'react';
-import { GetTaskType, GetTodolistType } from './api/api';
-import { RequestStatusType } from './reducers/app-reducer';
-import { ErrorSnackbar } from './components/ErrorSnackbar/ErrorSnackbar';
-import { TodolistsList } from './components/Todolists/TodolistsList';
-import { Login } from './components/Login/Login';
+import { RequestStatusType } from './app.reducer';
+import { TodolistsList } from '../features/todolistsList/TodolistsList';
+import { Login } from '../features/auth/Login';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { logOutTC, meTC } from './components/Login/auth-reducer';
+import { ErrorSnackbar } from 'common/components';
+import { authThunks } from 'features/auth/auth.reducer';
+import { useActions, useAppSelector } from 'common/hooks';
+import { GetTodolistType } from 'features/todolistsList/api.todolists';
+import { GetTaskType } from 'features/task/api.task';
 
 
 export type FilterType = 'All' | 'Active' | 'Completed'
@@ -23,23 +23,18 @@ export type TaskAssocType = {
 
 export const App = () => {
 
-	const dispatch = useAppDispatch()
+	const { logout, initializeApp } = useActions(authThunks)
 	let status = useAppSelector<RequestStatusType>(state => state.app.status)
 	let isInitialized = useAppSelector<boolean>(state => state.app.isInitialized)
 	let isLoggedIn = useAppSelector<boolean>(state => state.auth.isLoggedIn)
 
-	const logOut = () => {
-		dispatch(logOutTC())
-	}
+	const logOut = () => logout()
 
-	useEffect(() => {
-		dispatch(meTC())
-	}, [])
+	useEffect(() => { initializeApp() }, [])
 
 	if (!isInitialized) {
 		return <div className='app-loading'>Loading...</div>
 	}
-
 
 	return (
 		<>

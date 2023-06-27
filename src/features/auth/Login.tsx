@@ -1,50 +1,57 @@
-import { useFormik } from "formik"
-import { useAppDispatch, useAppSelector } from "../../reducers/store"
-import { loginTC } from "./auth-reducer"
+import { FormikHelpers, useFormik } from "formik"
 import { Navigate } from "react-router-dom"
+import { authThunks } from "./auth.reducer"
+import { ResponseType } from "common/api/api"
+import { useActions, useAppDispatch, useAppSelector } from "common/hooks"
+import { LoginType } from "./api.auth"
 
 
 type FormikErrorType = {
 	email?: string
 	password?: string
 	rememberMe?: boolean
+	captcha?: string
 }
 
 export const Login = () => {
 
-	const dispatch = useAppDispatch()
+	const {login} = useActions(authThunks)
 	const isLoggedIn = useAppSelector<boolean>(state => state.auth.isLoggedIn)
 
-	console.log(isLoggedIn)
-
-
 	const formik = useFormik({
+		validate: values => {
+
+			// const errors: FormikErrorType = {}
+			// if (!values.email) {
+			// 	errors.email = 'Required'
+			// }
+			// if (!values.password) {
+			// 	errors.password = 'Required'
+			// } else if (values.password?.trim()?.length < 3) {
+			// 	errors.password = 'Password must be at least 3 characters'
+			// }
+			// return errors
+		},
 		initialValues: {
 			email: '',
 			password: '',
 			rememberMe: false,
 		},
-		validate: values => {
-
-			const errors: FormikErrorType = {}
-			if (!values.email) {
-				errors.email = 'Required'
-			}
-			if (!values.password) {
-				errors.password = 'Required'
-			} else if (values.password?.trim()?.length < 3) {
-				errors.password = 'Password must be at least 3 characters'
-			}
-			return errors
-		},
-		onSubmit: values => {
-			dispatch(loginTC(values))
-			formik.resetForm()
+		onSubmit: (values, formikHelpers: FormikHelpers<LoginType>) => {
+			login(values).unwrap()
+				.catch((reason: ResponseType) => {
+					const { fieldsErrors } = reason
+					if (fieldsErrors) {
+						reason.fieldsErrors.forEach(fieldError => {
+							formikHelpers.setFieldError(fieldError.field, fieldError.error)
+						})
+					}
+				})
 		}
 	})
 
 
-	if(isLoggedIn) {
+	if (isLoggedIn) {
 		return <Navigate to={'/'} />
 	}
 
@@ -52,7 +59,7 @@ export const Login = () => {
 		<div>
 			<p>Чтобы войти в систему, пройдите регистрацию
 				<a href={'https://social-network.samuraijs.com/'}
-					target={'_blank'}> здесь
+					target='_blank' rel="noreferrer"> здесь
 				</a>
 			</p>
 			<p>or use common test account credentials:</p>

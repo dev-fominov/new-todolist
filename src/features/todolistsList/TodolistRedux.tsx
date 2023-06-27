@@ -1,13 +1,13 @@
 import { ChangeEvent, memo, useState, useEffect } from "react"
-import { FilterType } from "./App"
+import { FilterType } from "../../app/App"
 import s from "./Todolist.module.css"
-import { AddItemForm } from "./AddItemForm"
-import { EditableSpan } from "./EditableSpan"
-import { useAppDispatch, useAppSelector } from "./reducers/store"
-import { deleteTaskTC, getTasks, addTaskTC, updateTaskTC } from "./reducers/tasks-reducer"
-import { removeTodolistTC } from "./reducers/todolists-reducer"
-import { GetTaskType, TaskStatuses } from "./api/api"
-import { RequestStatusType } from "./reducers/app-reducer"
+import { tasksThunks } from "../task/tasks.reducer"
+import { RequestStatusType } from "../../app/app.reducer"
+import { AddItemForm, EditableSpan } from "common/components"
+import { todolistsThunks } from "features/todolistsList/todolists.reducer"
+import { useActions, useAppSelector } from "common/hooks"
+import { GetTaskType } from "features/task/api.task"
+import { TaskStatuses } from "common/enums/enums.type"
 
 type PropsType = {
 	title: string
@@ -24,15 +24,16 @@ export type TaskType = {
 
 export const TodolistRedux = memo((props: PropsType) => {
 
-	const dispatch = useAppDispatch()
+	const { getTasks, addTask, deleteTask, updateTask } = useActions(tasksThunks)
+	const { removeTodolist } = useActions(todolistsThunks)
 
 	useEffect(() => {
-		dispatch(getTasks(props.todolistID))
+		getTasks(props.todolistID)
 	}, [])
 
 	const tasks = useAppSelector<Array<GetTaskType>>(state => state.tasks[props.todolistID])
-	
-	
+
+
 	const [fValueNEW, setFValueNEW] = useState<FilterType>('All')
 	const [btnName, setBtnName] = useState<FilterType>('All')
 
@@ -52,24 +53,22 @@ export const TodolistRedux = memo((props: PropsType) => {
 	// }
 
 	const removeTaskHandler = (todolistID: string, taskID: string) => {
-		dispatch(deleteTaskTC(todolistID, taskID))
+		deleteTask({ todolistID, taskID })
 	}
 
-	const changeStatusHandler = (todolistID: string, taskID: string, e: ChangeEvent<HTMLInputElement>) => {
+	const changeStatusHandler = (todolistID: string, taskId: string, e: ChangeEvent<HTMLInputElement>) => {
 		let status = e.currentTarget.checked ? TaskStatuses.Completed : TaskStatuses.New
-		dispatch(updateTaskTC(todolistID, taskID, {status: status}))
+		updateTask({ todolistID, taskId, domainModel: { status } })
 	}
 
-	const removeTodolistHandler = () => {
-		dispatch(removeTodolistTC(props.todolistID))
-	}
+	const removeTodolistHandler = () => removeTodolist({ todolistID: props.todolistID })
 
 	const addTaskHandler = (title: string) => {
-		dispatch(addTaskTC(props.todolistID, title))
+		addTask({ todolistID: props.todolistID, title })
 	}
 
-	const updateTaskHandler = (taskID: string, updateTitle: string) => {
-		dispatch(updateTaskTC(props.todolistID, taskID, {title: updateTitle}))
+	const updateTaskHandler = (taskId: string, title: string) => {
+		updateTask({ todolistID: props.todolistID, taskId, domainModel: { title } })
 	}
 
 	return (

@@ -1,5 +1,5 @@
 import { ChangeEvent, KeyboardEvent, memo, useState } from "react"
-import s from "./Todolist.module.css"
+import s from "../../../features/todolistsList/Todolist.module.css"
 
 type AddItemFormsType = {
 	callBack: (title: string) => void
