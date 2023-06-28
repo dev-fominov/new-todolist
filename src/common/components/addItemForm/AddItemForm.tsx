@@ -1,11 +1,11 @@
-import { ChangeEvent, KeyboardEvent, memo, useState } from "react"
-import s from "../../../features/todolistsList/Todolist.module.css"
+import { ChangeEvent, KeyboardEvent, memo, useState, FC } from "react"
+import s from "../../../features/todolists/Todolist.module.css"
 
-type AddItemFormsType = {
-	callBack: (title: string) => void
+type Props = {
+	callBack: (title: string) => Promise<any>
 }
 
-export const AddItemForm = memo((props: AddItemFormsType) => {
+export const AddItemForm: FC<Props> = memo(({ callBack }) => {
 
 	const [titleTask, setTitleTask] = useState<string>('')
 	const [error, setError] = useState<string | null>(null)
@@ -17,8 +17,14 @@ export const AddItemForm = memo((props: AddItemFormsType) => {
 
 	const addTaskHandler = () => {
 		if (titleTask.trim()?.length) {
-			props.callBack(titleTask.trim())
-			setTitleTask('')
+			callBack(titleTask.trim())
+				.then(() => setTitleTask(''))
+				.catch(err => {
+					if(err.data) {
+						const message = err.data.messages.length ? err.data.messages[0] : 'Some error'
+						setError(message)
+					}
+				})
 		} else {
 			setError('Title is required')
 		}
@@ -29,7 +35,7 @@ export const AddItemForm = memo((props: AddItemFormsType) => {
 
 		if (event.key === 'Enter') {
 			if (titleTask.trim()?.length) {
-				props.callBack(titleTask.trim())
+				callBack(titleTask.trim())
 				setTitleTask('')
 			} else {
 				setError('Title is required')
@@ -38,14 +44,14 @@ export const AddItemForm = memo((props: AddItemFormsType) => {
 	}
 
 	return (
-		<>
+		<div>
 			<div>
 				<input className={error ? s.error : ''} onKeyDown={onKeyDownHandler} value={titleTask} onChange={onChangeHandler} />
 				<button onClick={addTaskHandler}>+</button>
 			</div>
 			{error?.length && <div className={s.errorMessage}>{error}</div>}
-		</>
+		</div>
 	)
-}, (prevProps: Readonly<AddItemFormsType>, nextProps: Readonly<AddItemFormsType>) => {
+}, (prevProps: Readonly<Props>, nextProps: Readonly<Props>) => {
 	return prevProps.callBack !== nextProps.callBack
 })

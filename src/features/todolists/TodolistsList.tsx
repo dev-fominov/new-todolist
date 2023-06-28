@@ -1,10 +1,10 @@
-import { TodolistDomainType } from "../../app/App"
-import { TodolistRedux } from "./TodolistRedux"
-import { todolistsThunks } from "./todolists.reducer"
+import { Todolist } from "./Todolist"
+import { todolistsThunks } from "./todolists.slice"
 import { Navigate } from "react-router-dom"
 import { useEffect } from 'react';
 import { AddItemForm } from "common/components"
 import { useActions, useAppSelector } from "common/hooks";
+import { TodolistDomainType } from "common/types/types";
 
 
 export const TodolistsList = () => {
@@ -15,10 +15,12 @@ export const TodolistsList = () => {
 
 	useEffect(() => {
 		if (!isLoggedIn) return
-		getTodos()
+		getTodos({})
 	}, [])
 
-	const addTodolistHandler = (title: string) => addTodolist(title)
+	const addTodolistHandler = (title: string) => {
+		return addTodolist(title).unwrap()
+	}
 
 	if (!isLoggedIn) {
 		return <Navigate to={'/login'} />
@@ -29,17 +31,7 @@ export const TodolistsList = () => {
 			<AddItemForm callBack={addTodolistHandler} />
 			<div className="contantTodolists">
 				{
-					todolists.map((el) => {
-						return (
-							<TodolistRedux
-								key={el.id}
-								todolistID={el.id}
-								title={el.title}
-								filter={el.filter}
-								entityStatus={el.entityStatus}
-							/>
-						)
-					})
+					todolists.map(todolist => <Todolist key={todolist.id} todolist={todolist} />)
 				}
 			</div>
 		</>

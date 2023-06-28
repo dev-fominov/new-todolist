@@ -1,6 +1,6 @@
 import { Dispatch } from "redux"
 import { ErrorsType } from "common/api/api"
-import { appActions } from "app/app.reducer"
+import { appActions } from "app/app.slice"
 import axios, { AxiosError } from "axios"
 
 /**

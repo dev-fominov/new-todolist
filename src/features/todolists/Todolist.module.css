@@ -1,0 +1,13 @@
+
+input {
+	outline: none;
+}
+
+.error {
+	border: 3px solid red;
+}
+
+.errorMessage {
+	color: red;
+	font-size: 12px;
+}

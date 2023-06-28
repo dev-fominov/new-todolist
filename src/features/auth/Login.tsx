@@ -1,36 +1,30 @@
 import { FormikHelpers, useFormik } from "formik"
 import { Navigate } from "react-router-dom"
-import { authThunks } from "./auth.reducer"
+import { authThunks } from "./auth.slice"
 import { ResponseType } from "common/api/api"
-import { useActions, useAppDispatch, useAppSelector } from "common/hooks"
-import { LoginType } from "./api.auth"
+import { useActions, useAppSelector } from "common/hooks"
+import { LoginType } from "./auth.api"
 
-
-type FormikErrorType = {
-	email?: string
-	password?: string
-	rememberMe?: boolean
-	captcha?: string
-}
+type FormikErrorType = Partial<Omit<LoginType, 'captcha'>>
 
 export const Login = () => {
 
-	const {login} = useActions(authThunks)
+	const { login } = useActions(authThunks)
 	const isLoggedIn = useAppSelector<boolean>(state => state.auth.isLoggedIn)
 
 	const formik = useFormik({
 		validate: values => {
 
-			// const errors: FormikErrorType = {}
-			// if (!values.email) {
-			// 	errors.email = 'Required'
-			// }
-			// if (!values.password) {
-			// 	errors.password = 'Required'
-			// } else if (values.password?.trim()?.length < 3) {
-			// 	errors.password = 'Password must be at least 3 characters'
-			// }
-			// return errors
+			const errors: FormikErrorType = {}
+			if (!values.email) {
+				errors.email = 'Required'
+			}
+			if (!values.password) {
+				errors.password = 'Required'
+			} else if (values.password?.trim()?.length < 3) {
+				errors.password = 'Password must be at least 3 characters'
+			}
+			return errors
 		},
 		initialValues: {
 			email: '',

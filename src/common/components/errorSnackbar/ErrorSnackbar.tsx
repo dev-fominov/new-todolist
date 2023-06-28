@@ -1,4 +1,4 @@
-import { ErrorType, appActions } from "app/app.reducer"
+import { ErrorType, appActions } from "app/app.slice"
 import { useAppDispatch, useAppSelector } from "common/hooks"
 
 export const ErrorSnackbar = () => {

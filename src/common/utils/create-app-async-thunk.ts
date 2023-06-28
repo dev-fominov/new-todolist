@@ -14,5 +14,10 @@ import { AppRootDispatchType, AppRootStateType } from "app/store";
 export const createAppAsyncThunk = createAsyncThunk.withTypes<{
 	state: AppRootStateType
 	dispatch: AppRootDispatchType
-	rejectValue: any
+	rejectValue: null | RejectValueType
 }>()
+
+export type RejectValueType = {
+	data: any
+	showGlobalError: boolean
+}

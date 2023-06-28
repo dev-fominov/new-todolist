@@ -1,25 +1,13 @@
 import './App.css';
 import { useEffect } from 'react';
-import { RequestStatusType } from './app.reducer';
-import { TodolistsList } from '../features/todolistsList/TodolistsList';
+import { RequestStatusType } from './app.slice';
+import { TodolistsList } from '../features/todolists/TodolistsList';
 import { Login } from '../features/auth/Login';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { ErrorSnackbar } from 'common/components';
-import { authThunks } from 'features/auth/auth.reducer';
+import { authThunks } from 'features/auth/auth.slice';
 import { useActions, useAppSelector } from 'common/hooks';
-import { GetTodolistType } from 'features/todolistsList/api.todolists';
-import { GetTaskType } from 'features/task/api.task';
 
-
-export type FilterType = 'All' | 'Active' | 'Completed'
-export type TodolistDomainType = GetTodolistType & {
-	filter: FilterType
-	entityStatus: RequestStatusType
-}
-
-export type TaskAssocType = {
-	[key: string]: GetTaskType[]
-}
 
 export const App = () => {
 
@@ -28,9 +16,9 @@ export const App = () => {
 	let isInitialized = useAppSelector<boolean>(state => state.app.isInitialized)
 	let isLoggedIn = useAppSelector<boolean>(state => state.auth.isLoggedIn)
 
-	const logOut = () => logout()
+	const logOut = () => logout({})
 
-	useEffect(() => { initializeApp() }, [])
+	useEffect(() => { initializeApp({}) }, [])
 
 	if (!isInitialized) {
 		return <div className='app-loading'>Loading...</div>

@@ -1,5 +1,5 @@
 import { ResponseType } from "common/api/api"
-import { appActions } from "app/app.reducer"
+import { appActions } from "app/app.slice"
 import { Dispatch } from "redux"
 
 /**
